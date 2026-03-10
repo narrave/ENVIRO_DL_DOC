@@ -1,34 +1,48 @@
-# ENVIRO_DL STM32 — User Guide
-
-**Product:** ENVIRO_DL Environmental Data Logger
-**Platform:** STM32F417 (ARM Cortex-M4)
-**Firmware:** ENVIRO_DL_STM32F
-**Manufacturer:** EIPL (Envirotech Instruments Pvt. Ltd.)
-
 ---
-
-## Table of Contents
-
-1. [System Overview](#1-system-overview)
-2. [Hardware Description](#2-hardware-description)
-3. [Getting Started](#3-getting-started)
-4. [Front Panel Operation](#4-front-panel-operation)
-5. [LCD Display Pages](#5-lcd-display-pages)
-6. [Sensor Suite](#6-sensor-suite)
-7. [Data Logging](#7-data-logging)
-8. [Configuration](#8-configuration)
-9. [Communication Interfaces](#9-communication-interfaces)
-10. [Terminal Command Reference](#10-terminal-command-reference)
-11. [Remote Data Upload](#11-remote-data-upload)
-12. [Firmware Over-the-Air (FOTA) Update](#12-firmware-over-the-air-fota-update)
-13. [LED Status Indicator](#13-led-status-indicator)
-14. [Fault Codes & Troubleshooting](#14-fault-codes--troubleshooting)
-15. [SD Card File Reference](#15-sd-card-file-reference)
-16. [Technical Specifications](#16-technical-specifications)
-17. [Known Limitations](#17-known-limitations)
-
+title: "ENVIRO_DL STM32 — User Guide"
+author: "EIPL (Envirotech Instruments Pvt. Ltd.)"
+date: "March 2026"
+header-includes:
+  - \usepackage{fontspec}
+  - \setmainfont{Calibri}
+  - \setmonofont{Consolas}
+  - \usepackage{geometry}
+  - \geometry{a4paper, margin=2.5cm, top=3cm, bottom=3cm}
+  - \usepackage{xcolor}
+  - \definecolor{eiblue}{RGB}{0,70,127}
+  - \definecolor{lightgray}{RGB}{245,245,245}
+  - \definecolor{codebg}{RGB}{240,240,240}
+  - \usepackage{titlesec}
+  - \titleformat{\section}{\color{eiblue}\fontsize{20}{24}\selectfont\bfseries}{\thesection}{1em}{}
+  - \titleformat{\subsection}{\color{eiblue}\fontsize{16}{20}\selectfont\bfseries}{\thesubsection}{1em}{}
+  - \titleformat{\subsubsection}{\color{eiblue}\fontsize{13}{16}\selectfont\bfseries}{\thesubsubsection}{1em}{}
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhf{}
+  - \fancyhead[L]{\color{eiblue}\small\textbf{ENVIRO\_DL STM32 — User Guide}}
+  - \fancyhead[R]{\color{eiblue}\small EIPL}
+  - \fancyfoot[C]{\color{gray}\small\thepage}
+  - \fancyfoot[L]{\color{gray}\small ENVIRO\_DL\_STM32F}
+  - \fancyfoot[R]{\color{gray}\small March 2026}
+  - \renewcommand{\headrulewidth}{0.4pt}
+  - \renewcommand{\footrulewidth}{0.4pt}
+  - \usepackage{hyperref}
+  - \hypersetup{colorlinks=true, linkcolor=eiblue, urlcolor=eiblue, citecolor=eiblue}
+  - \usepackage{mdframed}
+  - \usepackage{etoolbox}
+  - \BeforeBeginEnvironment{verbatim}{\begin{mdframed}[backgroundcolor=codebg, linewidth=0pt, innerleftmargin=8pt, innerrightmargin=8pt, innertopmargin=6pt, innerbottommargin=6pt]\begin{minipage}{\linewidth}}
+  - \AfterEndEnvironment{verbatim}{\end{minipage}\end{mdframed}}
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{needspace}
+  - \widowpenalty=10000
+  - \clubpenalty=10000
+  - \preto\section{\needspace{8\baselineskip}}
+  - \preto\subsection{\needspace{6\baselineskip}}
+  - \preto\subsubsection{\needspace{4\baselineskip}}
+  - \setlength{\parskip}{6pt}
+  - \setlength{\parindent}{0pt}
 ---
-
 ## 1. System Overview
 
 The **ENVIRO_DL** is a rugged, embedded environmental data logger designed for continuous outdoor monitoring. It measures a comprehensive set of meteorological parameters, stores readings locally on an SD card, and transmits data to a remote server via an integrated LTE modem.
@@ -49,7 +63,6 @@ The **ENVIRO_DL** is a rugged, embedded environmental data logger designed for c
 ## 2. Hardware Description
 
 ### Block Diagram
-
 ```
  ┌──────────────────────────────────────────────────────────────────┐
  │                        STM32F417 MCU                            │
@@ -113,7 +126,7 @@ Before powering on, ensure:
 
 ### 3.3 Initial Configuration (Required)
 
-Connect via USB (see [Section 9.1](#91-usb-cdc-virtual-com-port)). All writable configuration is done through the **C02** system config command. Changes are saved to the SD card automatically when the command is accepted.
+Connect via USB (see Section 9.1). All writable configuration is done through the **C02** system config command. Changes are saved to the SD card automatically when the command is accepted.
 
 Set station identity:
 ```
@@ -337,7 +350,7 @@ The upload packet and CSV log use the following fixed channel assignments:
 | ch13 | Daily Rainfall | mm | Tipping bucket, accumulated since midnight |
 | ch14 | Battery / Supply Voltage | V | Always included |
 
-> \* Unit conversion applies if configured. See [Section 8.4](#84-unit-conversion).
+> \* Unit conversion applies if configured. See Section 8.4.
 > Channels for disabled sensors are omitted from the packet (not sent as zero).
 
 ### 7.3 Snap Interval
@@ -512,7 +525,7 @@ C06 initiates a FOTA firmware update check (same as the `startfota` terminal com
 (?eipl,C06,000000,?)
 ```
 
-See [Section 12](#12-firmware-over-the-air-fota-update) for full FOTA details.
+See Section 12 for full FOTA details.
 
 ### 8.7 THP Sensor Offsets (C09)
 
@@ -545,7 +558,7 @@ The unit appears as a **USB CDC ACM** virtual serial port when connected to a PC
 2. Open Device Manager; note the COM port assigned (e.g., COM8)
 3. Open terminal software, connect to COM8 (baud rate: any)
 4. You will see the device boot log or the `>` prompt
-5. Send commands as described in [Section 10](#10-terminal-command-reference)
+5. Send commands as described in Section 10
 
 ### 9.2 UART1 Terminal
 
@@ -937,7 +950,18 @@ The following features are planned or partially implemented but not yet availabl
 | **ch13** | Daily rainfall total (mm) in every upload packet |
 | **ch14** | Battery / supply voltage (V) — always included in every upload packet |
 
+
+**Product:** ENVIRO_DL Environmental Data Logger
+
+**Platform:** STM32F417 (ARM Cortex-M4)
+
+**Firmware:** ENVIRO_DL_STM32F
+
+**Manufacturer:** EIPL (Envirotech Instruments Pvt. Ltd.)
+
 ---
 
-*Document generated from firmware source code — ENVIRO_DL_STM32F, March 2026*
+*— ENVIRO_DL_STM32F, March 2026*
 *For technical support, contact SVIOT.*
+
+---

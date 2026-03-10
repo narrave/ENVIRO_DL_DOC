@@ -1,0 +1,1540 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{}
+
+\begin{document}
+
+{
+\setcounter{tocdepth}{3}
+\tableofcontents
+}
+\section{ENVIRO\_DL STM32 --- User
+Guide}\label{enviro_dl-stm32-user-guide}
+
+\textbf{Product:} ENVIRO\_DL Environmental Data Logger
+\textbf{Platform:} STM32F417 (ARM Cortex-M4) \textbf{Firmware:}
+ENVIRO\_DL\_STM32F \textbf{Manufacturer:} EIPL (Envirotech Instruments
+Pvt. Ltd.)
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Table of Contents}\label{table-of-contents}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \hyperref[1-system-overview]{System Overview}
+\item
+  \hyperref[2-hardware-description]{Hardware Description}
+\item
+  \hyperref[3-getting-started]{Getting Started}
+\item
+  \hyperref[4-front-panel-operation]{Front Panel Operation}
+\item
+  \hyperref[5-lcd-display-pages]{LCD Display Pages}
+\item
+  \hyperref[6-sensor-suite]{Sensor Suite}
+\item
+  \hyperref[7-data-logging]{Data Logging}
+\item
+  \hyperref[8-configuration]{Configuration}
+\item
+  \hyperref[9-communication-interfaces]{Communication Interfaces}
+\item
+  \hyperref[10-terminal-command-reference]{Terminal Command Reference}
+\item
+  \hyperref[11-remote-data-upload]{Remote Data Upload}
+\item
+  \hyperref[12-firmware-over-the-air-fota-update]{Firmware Over-the-Air
+  (FOTA) Update}
+\item
+  \hyperref[13-led-status-indicator]{LED Status Indicator}
+\item
+  \hyperref[14-fault-codes--troubleshooting]{Fault Codes \&
+  Troubleshooting}
+\item
+  \hyperref[15-sd-card-file-reference]{SD Card File Reference}
+\item
+  \hyperref[16-technical-specifications]{Technical Specifications}
+\item
+  \hyperref[17-known-limitations]{Known Limitations}
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{1. System Overview}\label{system-overview}
+
+The \textbf{ENVIRO\_DL} is a rugged, embedded environmental data logger
+designed for continuous outdoor monitoring. It measures a comprehensive
+set of meteorological parameters, stores readings locally on an SD card,
+and transmits data to a remote server via an integrated LTE modem.
+
+\subsubsection{Key Capabilities}\label{key-capabilities}
+
+\begin{itemize}
+\tightlist
+\item
+  Measures temperature, humidity, pressure, wind speed/direction,
+  rainfall, and solar radiation
+\item
+  Logs data to an SD card in daily CSV files at a configurable interval
+  (default: every 5 minutes)
+\item
+  Uploads data to a remote server over LTE (HTTP POST), configurable
+  upload period
+\item
+  Displays live readings and system status on a 128×64 graphical LCD
+\item
+  Accepts configuration and commands via USB (virtual COM port) or UART
+  terminal
+\item
+  Supports Firmware Over-the-Air (FOTA) updates with automatic rollback
+  on failure
+\item
+  Maintains time across power loss using an external battery-backed RTC
+  (MCP7940)
+\item
+  Runs FreeRTOS with multiple concurrent tasks for reliable, real-time
+  operation
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{2. Hardware Description}\label{hardware-description}
+
+\subsubsection{Block Diagram}\label{block-diagram}
+
+\begin{verbatim}
+ ┌──────────────────────────────────────────────────────────────────┐
+ │                        STM32F417 MCU                            │
+ │                                                                  │
+ │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────────────┐   │
+ │  │SensorTask│  │UploadTask│  │ CmdTask  │  │ KeyboardTask  │   │
+ │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────┬────────┘   │
+ │       │              │              │                │            │
+ └───────┼──────────────┼──────────────┼────────────────┼───────────┘
+         │              │              │                │
+    ┌────▼────┐    ┌────▼────┐   ┌────▼────┐   ┌───────▼───────┐
+    │ Sensors │    │LTE Modem│   │USB / UART│  │Keypad + Pulses│
+    │I2C/UART │    │(Quectel)│   │(Terminal)│  │Front Panel    │
+    └─────────┘    └─────────┘   └──────────┘  └───────────────┘
+         │
+    ┌────▼──────────────────────────────────────────────────┐
+    │  NAU7802 (Temp) | ADS112C04 (Hum/P/Solar/WindDir)    │
+    │  RS485 Wind Sensor | SHT25/45/BMP280 | Rain Gauge    │
+    └───────────────────────────────────────────────────────┘
+\end{verbatim}
+
+\subsubsection{Connectors \& Ports}\label{connectors-ports}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2727}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2727}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4545}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Port
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Type
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Function
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+USB & USB-B / Micro-USB & Virtual COM port (CDC) for terminal commands
+\& debug \\
+UART1 & RS-232 / TTL header & Quectel LTE modem; also alternate terminal
+interface \\
+UART2 / RS485 & 2-wire RS485 & Wind speed sensor (Modbus RTU or Gill
+ASCII) \\
+I2C (Internal) & PCB traces & NAU7802, ADS112C04, SHT25/45, BMP280,
+MCP7940 RTC \\
+SD Card & MicroSD slot & Data logging, configuration, FOTA firmware
+staging \\
+Rain Gauge & 2-pin screw terminal & Tipping bucket pulse input (PG7) \\
+LCD & On-board ribbon & 128×64 GLCD display \\
+Keypad & On-board or header & 6-button navigation
+(Up/Down/Left/Right/ESC/Enter) \\
+SIM Card & SIM slot (modem) & LTE SIM for data connectivity \\
+LED & On-board & Green/Red status indicator (PG4) \\
+\end{longtable}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{3. Getting Started}\label{getting-started}
+
+\subsubsection{3.1 Prerequisites}\label{prerequisites}
+
+Before powering on, ensure:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{SD card inserted} --- FAT32 formatted, minimum 1 GB
+  recommended
+\item
+  \textbf{SIM card installed} in the LTE modem slot (if remote upload is
+  required)
+\item
+  \textbf{Sensors connected} per the wiring diagram (rain gauge, wind
+  sensor, analog sensors)
+\item
+  \textbf{Antenna attached} to the LTE modem SMA connector
+\end{enumerate}
+
+\subsubsection{3.2 First Power-On}\label{first-power-on}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Apply 5--12 V DC power to the unit
+\item
+  The LCD will display the \textbf{Envirotech splash screen} for
+  approximately 5 seconds
+\item
+  The system will:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Synchronize time from the external RTC (MCP7940) if previously set
+  \item
+    Mount the SD card and load \texttt{config.bin}, \texttt{nvdata.bin}
+  \item
+    Initialize all sensors and verify communication
+  \item
+    Start the FreeRTOS tasks (sensor reading, upload, UI, command)
+  \end{itemize}
+\item
+  The STATUS LED will begin \textbf{blinking at 1 Hz} to indicate
+  healthy operation
+\item
+  The LCD will transition to the \textbf{status dashboard} (Page 0)
+\end{enumerate}
+
+\subsubsection{3.3 Initial Configuration
+(Required)}\label{initial-configuration-required}
+
+Connect via USB (see \hyperref[91-usb-cdc-virtual-com-port]{Section
+9.1}). All writable configuration is done through the \textbf{C02}
+system config command. Changes are saved to the SD card automatically
+when the command is accepted.
+
+Set station identity:
+
+\begin{verbatim}
+(?eipl,C02,000000,sid=AWS_ROOF&lkey=SITE01?)
+\end{verbatim}
+
+Set the primary server IP:
+
+\begin{verbatim}
+(?eipl,C02,000000,sip1=192.168.1.100?)
+\end{verbatim}
+
+Set the current date and time (format: YYMMDDHHmm, 10 digits):
+
+\begin{verbatim}
+(?eipl,C02,000000,rtc=2603091030?)
+\end{verbatim}
+
+Read back station info to confirm:
+
+\begin{verbatim}
+(?eipl,C01,000000,?)
+\end{verbatim}
+
+After configuration, the unit will begin logging and uploading
+automatically.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{4. Front Panel Operation}\label{front-panel-operation}
+
+\subsubsection{4.1 Button Functions}\label{button-functions}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Button & Short Press & Long Press \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Up} & Previous LCD page & --- \\
+\textbf{Down} & Next LCD page & --- \\
+\textbf{Left} & Previous item / Decrease value & --- \\
+\textbf{Right} & Next item / Increase value & --- \\
+\textbf{Enter} & Confirm selection & Enter configuration menu \\
+\textbf{ESC} & Cancel / Exit menu & Return to main dashboard \\
+\end{longtable}
+
+\subsubsection{4.2 Navigation Flow}\label{navigation-flow}
+
+\begin{verbatim}
+Page 0: Status Bar
+   ↕ (Up/Down)
+Page 1: Temperature & Humidity
+   ↕
+Page 2: Wind Speed & Direction
+   ↕
+Page 3: Rainfall & Solar Radiation
+   ↕
+Page 4: Uplink Counters
+   ↕
+Page 5: FOTA Progress (only during update)
+\end{verbatim}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{5. LCD Display Pages}\label{lcd-display-pages}
+
+\subsubsection{Page 0 --- System Status
+Bar}\label{page-0-system-status-bar}
+
+\begin{verbatim}
+ [ANT] GSM:▌▌▌  Bat:12.3V
+ 2026-03-09  10:25:00
+ SD:OK  MOD:OK  RTC:OK
+\end{verbatim}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Symbol & Meaning \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{{[}ANT{]}} & Antenna / LTE connected \\
+\texttt{GSM:▌▌▌} & Signal strength (1--5 bars) \\
+\texttt{Bat:12.3V} & Battery/supply voltage \\
+\texttt{SD:OK} & SD card healthy \\
+\texttt{MOD:OK} & LTE modem responding \\
+\texttt{RTC:OK} & Real-time clock healthy \\
+\end{longtable}
+
+\subsubsection{Page 1 --- Temperature \&
+Humidity}\label{page-1-temperature-humidity}
+
+\begin{verbatim}
+ Temp:  25.3 °C
+ Hum:   64.5 %RH
+ DewPt: 17.9 °C
+ Press: 1013.2 mbar
+\end{verbatim}
+
+\subsubsection{Page 2 --- Wind}\label{page-2-wind}
+
+\begin{verbatim}
+ Wind Spd:  3.2 m/s
+ Wind Dir:  NNE (025°)
+ Gust:      5.1 m/s
+ Avg(5min): 2.9 m/s
+\end{verbatim}
+
+\subsubsection{Page 3 --- Rainfall \&
+Solar}\label{page-3-rainfall-solar}
+
+\begin{verbatim}
+ Rain Today: 12.50 mm
+ Rain/Hour:   2.00 mm
+ Solar:      450 W/m²
+\end{verbatim}
+
+\subsubsection{Page 4 --- Upload Counters}\label{page-4-upload-counters}
+
+\begin{verbatim}
+ Uploads Attempted: 145
+ Uploads Success:   143
+ Last Upload: 10:20:00
+ Next Upload: 10:25:00
+\end{verbatim}
+
+\subsubsection{Page 5 --- FOTA Progress (during update
+only)}\label{page-5-fota-progress-during-update-only}
+
+\begin{verbatim}
+ FOTA Update in Progress
+ [##########          ] 52%
+ Downloading firmware...
+ DO NOT POWER OFF
+\end{verbatim}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{6. Sensor Suite}\label{sensor-suite}
+
+\subsubsection{6.1 Temperature --- NAU7802 + PT1000
+RTD}\label{temperature-nau7802-pt1000-rtd}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Type:} PT1000 resistance temperature detector (RTD)
+\item
+  \textbf{Interface:} I2C, address 0x54
+\item
+  \textbf{Resolution:} 24-bit ADC
+\item
+  \textbf{Accuracy:} ±0.3 °C (sensor dependent)
+\item
+  \textbf{Conversion:} Callendar-Van Dusen polynomial
+\item
+  \textbf{Output channels:} ch2 (primary temperature)
+\end{itemize}
+
+\subsubsection{6.2 Humidity, Pressure, Solar Radiation, Wind Direction
+---
+ADS112C04}\label{humidity-pressure-solar-radiation-wind-direction-ads112c04}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Type:} 24-bit multi-channel ADC (Texas Instruments ADS112C04)
+\item
+  \textbf{Interface:} I2C
+\item
+  \textbf{Channels used:}
+\end{itemize}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+ADC Channel & Parameter & Unit \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Ch0 & Relative Humidity & \%RH \\
+Ch1 & Atmospheric Pressure & mbar \\
+Ch3 & Solar Radiation & W/m² \\
+Ch4 & Wind Direction (voltage) & degrees \\
+\end{longtable}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Reference voltage:} Internal 2.048 V or external
+\item
+  \textbf{Calibration:} Gain and offset configurable via C02 command
+\end{itemize}
+
+\subsubsection{6.3 Wind Speed --- RS485
+Sensor}\label{wind-speed-rs485-sensor}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Interface:} UART2 via RS485 transceiver
+\item
+  \textbf{Supported protocols:}
+\end{itemize}
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Protocol & Sensor Brand & Baud Rate & Format \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Modbus RTU & RENKEE & 9600 8N1 & Register query \\
+ASCII (Gill) & Gill Instruments & Configurable &
+\texttt{"w?\textbackslash{}r\textbackslash{}n"} query \\
+\end{longtable}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Sample rate:} Approximately once per second
+\item
+  \textbf{Computed values:} Minimum, maximum, and average wind speed
+  over the snap interval; gust speed
+\item
+  \textbf{Squall detection:} WMO-standard state machine; triggers on
+  \textgreater25\% speed increase
+\end{itemize}
+
+\subsubsection{6.4 Rainfall --- Tipping Bucket
+Gauge}\label{rainfall-tipping-bucket-gauge}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Interface:} GPIO falling-edge pulse on pin PG7
+\item
+  \textbf{Debounce:} Software debounce --- pulse is confirmed by
+  re-reading the pin 20 ms later
+\item
+  \textbf{Default resolution:} 0.5 mm per tip (configurable via
+  \texttt{rain\_mm\_per\_tick})
+\item
+  \textbf{Accumulators:}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{rain\_inday} --- resets at midnight (or configured reset
+    hour)
+  \item
+    \texttt{rain\_inhour} --- resets after each upload period
+  \end{itemize}
+\item
+  \textbf{Persistence:} Rain counts are saved to SD card
+  (\texttt{nvdata.bin}) and survive power loss
+\end{itemize}
+
+\subsubsection{6.5 Secondary T/H/P --- SHT25 / SHT45 /
+BMP280}\label{secondary-thp-sht25-sht45-bmp280}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Purpose:} Secondary/redundant temperature, humidity, and
+  pressure measurement
+\item
+  \textbf{Interface:} I2C
+
+  \begin{itemize}
+  \tightlist
+  \item
+    SHT25: 0x40
+  \item
+    SHT45: 0x44
+  \item
+    BMP280: 0x76
+  \end{itemize}
+\item
+  \textbf{Sensor type selected at firmware compile time}
+\item
+  \textbf{User-configurable offsets} applied to all readings (see C09
+  command)
+\end{itemize}
+
+\subsubsection{6.6 Dew Point (Computed)}\label{dew-point-computed}
+
+Dew point is computed automatically from temperature and relative
+humidity using the Magnus formula. It is not a separate sensor and is
+not currently included as a named channel in the upload packet or CSV
+log. It is displayed locally on the LCD.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{7. Data Logging}\label{data-logging}
+
+\subsubsection{7.1 Log File Format}\label{log-file-format}
+
+Data is written to the SD card as daily \textbf{CSV files} in URL
+query-string format:
+
+\textbf{Filename:} \texttt{DDMMYY.csv} Example: \texttt{090326.csv} = 9
+March 2026
+
+\textbf{Each log line (one per snap interval):}
+
+\begin{verbatim}
+000001&locationkey=SITE01&stationkey=AWS_ROOF&datetime=1741513500&ch1=26.50&ch2=25.30&ch3=24.10&ch4=65.20&ch5=64.50&ch6=63.80&ch7=450.0&ch8=1013.2&ch9=025&ch10=4.80&ch11=3.20&ch12=2.50&ch13=12.50&ch14=12.3
+\end{verbatim}
+
+\subsubsection{7.2 Channel Reference}\label{channel-reference}
+
+The upload packet and CSV log use the following fixed channel
+assignments:
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2647}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3235}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1765}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2353}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Channel
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Parameter
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Unit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Source
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+ch1 & Temperature Maximum (AT\_Max) & °C* & PT1000/NAU7802, MMA over
+snap interval \\
+ch2 & Temperature Average (AT\_Avg) & °C* & PT1000/NAU7802, MMA over
+snap interval \\
+ch3 & Temperature Minimum (AT\_Min) & °C* & PT1000/NAU7802, MMA over
+snap interval \\
+ch4 & Humidity Maximum (RH\_Max) & \%RH & ADS112C04, MMA over snap
+interval \\
+ch5 & Humidity Average (RH\_Avg) & \%RH & ADS112C04, MMA over snap
+interval \\
+ch6 & Humidity Minimum (RH\_Min) & \%RH & ADS112C04, MMA over snap
+interval \\
+ch7 & Solar Radiation (instantaneous) & W/m²* & ADS112C04, last reading
+at snap \\
+ch8 & Barometric Pressure & mbar* & ADS112C04 / BMP280, last reading at
+snap \\
+ch9 & Wind Direction & degrees & RS485 sensor, last reading at snap \\
+ch10 & Wind Speed Maximum (WS\_Max) & m/s* & RS485 sensor, MMA over snap
+interval \\
+ch11 & Wind Speed Average (WS\_Avg) & m/s* & RS485 sensor, MMA over snap
+interval \\
+ch12 & Wind Speed Minimum (WS\_Min) & m/s* & RS485 sensor, MMA over snap
+interval \\
+ch13 & Daily Rainfall & mm & Tipping bucket, accumulated since
+midnight \\
+ch14 & Battery / Supply Voltage & V & Always included \\
+\end{longtable}
+
+\begin{quote}
+* Unit conversion applies if configured. See
+\hyperref[84-unit-conversion]{Section 8.4}. Channels for disabled
+sensors are omitted from the packet (not sent as zero).
+\end{quote}
+
+\subsubsection{7.3 Snap Interval}\label{snap-interval}
+
+The \textbf{snap interval} defines how often a line is written to the
+log file and how often data is uploaded. Default: \textbf{5 minutes}.
+
+\begin{itemize}
+\tightlist
+\item
+  Configurable from 1 to 1440 minutes
+\item
+  At each snap, the system computes min/max/average over all readings
+  collected since the last snap
+\item
+  Rain accumulator reflects all tips since the start of the current day
+\end{itemize}
+
+\subsubsection{7.4 Min/Max/Average
+Computation}\label{minmaxaverage-computation}
+
+Within each snap interval the firmware continuously accumulates: -
+Temperature, humidity, pressure, solar: simple running average - Wind
+speed: separate min, max, average (1 sample per second) - Wind gust:
+peak instantaneous speed, with timestamp and direction
+
+All accumulators reset at the start of each new snap window.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{8. Configuration}\label{configuration}
+
+Configuration is stored in binary files on the SD card and loaded at
+boot. Changes made via C02 and C03 are \textbf{saved to SD card
+automatically} --- no separate save command is needed.
+
+\subsubsection{8.1 Station Info --- Read Only
+(C01)}\label{station-info-read-only-c01}
+
+C01 is a \textbf{read-only} status report. Send it without parameters to
+retrieve the current station ID, firmware version, signal level, and
+fault code:
+
+\begin{verbatim}
+(?eipl,C01,000000,?)
+\end{verbatim}
+
+\textbf{Response fields:}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Field & Description \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{SID} & Station/site ID \\
+\texttt{T} & Current date-time (YYMMDDHHmm) \\
+\texttt{DID} & Device ID \\
+\texttt{FW} & Firmware version string \\
+\texttt{Q} & GSM signal / BER \\
+\texttt{F} & Fault bitmask (see Section 14.1) \\
+\end{longtable}
+
+\subsubsection{8.2 System Configuration --- Read / Write
+(C02)}\label{system-configuration-read-write-c02}
+
+C02 is the main configuration command. Send one or more
+\texttt{key=value} pairs in a single packet. Changes are saved
+automatically.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Parameter & Description & Example \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{sid} & Station/site ID (3--9 chars) & \texttt{sid=AWS\_ROOF} \\
+\texttt{lkey} & Location key (1--6 chars) & \texttt{lkey=SITE01} \\
+\texttt{mpm} & Snap interval in minutes (1--1440) & \texttt{mpm=5} \\
+\texttt{upm} & Upload period in minutes (1--1440) & \texttt{upm=5} \\
+\texttt{sip1} & Primary server IP address &
+\texttt{sip1=192.168.1.100} \\
+\texttt{sip2} & Secondary server IP address &
+\texttt{sip2=192.168.1.101} \\
+\texttt{rtc} & Set RTC date/time (YYMMDDHHmm, 10 digits) &
+\texttt{rtc=2603091030} \\
+\texttt{drh} & Daily rain reset hour (0--2350, HHMM) & \texttt{drh=0} \\
+\texttt{rt} & Rain gauge tick value in mm (e.g.~0.5) &
+\texttt{rt=0.5} \\
+\texttt{smn} & Server mobile number (10--13 digits) &
+\texttt{smn=9440520222} \\
+\texttt{dmn1} & Device mobile number 1 & \texttt{dmn1=9876543210} \\
+\texttt{dmn2} & Device mobile number 2 & \texttt{dmn2=9123456789} \\
+\texttt{ucf} & Uplink control flags (hex byte) & \texttt{ucf=80} (GPRS
+ON) \\
+\end{longtable}
+
+\textbf{Examples:}
+
+\begin{verbatim}
+# Set site ID and location key
+(?eipl,C02,000000,sid=AWS_ROOF&lkey=SITE01?)
+
+# Set snap interval to 5 min and upload period to 15 min
+(?eipl,C02,000000,mpm=5&upm=15?)
+
+# Set primary server IP
+(?eipl,C02,000000,sip1=192.168.1.100?)
+
+# Set RTC to 09 March 2026, 10:30
+(?eipl,C02,000000,rtc=2603091030?)
+
+# Read all current system config values
+(?eipl,C02,000000,?)
+\end{verbatim}
+
+\subsubsection{8.3 Sensor Enable / Disable
+(C03)}\label{sensor-enable-disable-c03}
+
+C03 enables or disables individual sensors and sets the wind sensor
+protocol. Disabled sensors are excluded from the upload packet and CSV
+log.
+
+\textbf{Packet format:} \texttt{sdiid=enabled,cfgbits{[},uc{]}} groups
+separated by \texttt{;}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+sdiid & Sensor & Upload channels controlled \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{B} & Base ADC (ADS112C04 raw) & --- \\
+\texttt{R} & Rain gauge & ch13 \\
+\texttt{W} & Wind speed / direction (RS485) & ch9--ch12 \\
+\texttt{T} & Temperature + Humidity (THP) & ch1--ch6 \\
+\texttt{H} & Humidity / Pressure ADC slot & ch8 \\
+\texttt{P} & Pressure / Solar ADC slot & ch7 \\
+\texttt{S} & Solar radiation ADC slot & --- \\
+\end{longtable}
+
+\textbf{\texttt{cfgbits} for Wind sensor (\texttt{W}):}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+cfgbits & Protocol & Sensor \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{0x00} & Modbus RTU & RENKEE \\
+\texttt{0x01} & ASCII (Gill) & Gill Instruments \\
+\end{longtable}
+
+\textbf{\texttt{uc} (unit conversion) field:}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Sensor & uc value & Unit \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+T (temperature) & 0 & °C (default) \\
+T (temperature) & 1 & °F \\
+W (wind speed) & 0 & m/s (default) \\
+W (wind speed) & 1 & km/h \\
+W (wind speed) & 2 & knots \\
+W (wind speed) & 3 & mph \\
+H (pressure slot) & 0 & Pa (default) \\
+H (pressure slot) & 1 & hPa/mbar \\
+H (pressure slot) & 2 & inHg \\
+H (pressure slot) & 3 & mmHg \\
+P (solar slot) & 0 & W/m² (default) \\
+P (solar slot) & 1 & kWh/m² \\
+\end{longtable}
+
+\textbf{Examples:}
+
+\begin{verbatim}
+# Enable all sensors, RENKEE wind protocol, SI units
+(?eipl,C03,000000,R=Y,0x00;W=Y,0x00;T=Y,0x00;H=Y,0x00;P=Y,0x00?)
+
+# Enable Gill wind sensor
+(?eipl,C03,000000,W=Y,0x01?)
+
+# Disable rain sensor
+(?eipl,C03,000000,R=N,0x00?)
+
+# Set temperature to Fahrenheit (uc=1)
+(?eipl,C03,000000,T=Y,0x00,1?)
+
+# Set wind speed to km/h (uc=1)
+(?eipl,C03,000000,W=Y,0x00,1?)
+
+# Read all sensor config states
+(?eipl,C03,000000,c03?)
+\end{verbatim}
+
+\subsubsection{8.4 Read Sensor Description
+(C04)}\label{read-sensor-description-c04}
+
+C04 is \textbf{read-only}. It returns the sensor slot configuration
+(IDs, ranges, parameters) for diagnostic use:
+
+\begin{verbatim}
+(?eipl,C04,000000,?)
+\end{verbatim}
+
+\subsubsection{8.5 FTP Configuration (C05)}\label{ftp-configuration-c05}
+
+C05 configures FTP upload credentials (reserved for future use):
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Parameter & Description \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{ftu} & FTP username \\
+\texttt{ftp} & FTP password \\
+\texttt{ftd} & FTP directory \\
+\texttt{fts} & FTP state \\
+\end{longtable}
+
+\begin{verbatim}
+(?eipl,C05,000000,ftu=myuser&ftp=mypass&ftd=/data?)
+\end{verbatim}
+
+\subsubsection{8.6 Trigger Firmware Update
+(C06)}\label{trigger-firmware-update-c06}
+
+C06 initiates a FOTA firmware update check (same as the
+\texttt{startfota} terminal command):
+
+\begin{verbatim}
+(?eipl,C06,000000,?)
+\end{verbatim}
+
+See \hyperref[12-firmware-over-the-air-fota-update]{Section 12} for full
+FOTA details.
+
+\subsubsection{8.7 THP Sensor Offsets
+(C09)}\label{thp-sensor-offsets-c09}
+
+Apply field correction offsets to the secondary
+temperature/humidity/pressure sensor readings:
+
+\begin{verbatim}
+(?eipl,C09,000000,TEMP_offset=+0.5&HUM_offset=-2.0&PRESURE_offset=+1.5?)
+\end{verbatim}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{9. Communication Interfaces}\label{communication-interfaces}
+
+\subsubsection{9.1 USB CDC (Virtual COM
+Port)}\label{usb-cdc-virtual-com-port}
+
+The unit appears as a \textbf{USB CDC ACM} virtual serial port when
+connected to a PC.
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Property & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Driver & Native (Windows 10/11, Linux, macOS) \\
+Baud Rate & Not applicable (USB CDC) \\
+Windows port name & \texttt{COMx} (Device Manager → Ports) \\
+Linux/macOS port & \texttt{/dev/ttyACM0} or
+\texttt{/dev/cu.usbmodem*} \\
+Packet size & Up to 512 bytes \\
+\end{longtable}
+
+\textbf{Recommended terminal software:} PuTTY, TeraTerm, minicom, or any
+serial terminal at any baud rate.
+
+\textbf{Connection steps:} 1. Connect USB cable from PC to unit 2. Open
+Device Manager; note the COM port assigned (e.g., COM8) 3. Open terminal
+software, connect to COM8 (baud rate: any) 4. You will see the device
+boot log or the \texttt{\textgreater{}} prompt 5. Send commands as
+described in \hyperref[10-terminal-command-reference]{Section 10}
+
+\subsubsection{9.2 UART1 Terminal}\label{uart1-terminal}
+
+An alternate terminal interface is available on UART1 at \textbf{9600
+baud, 8N1} (shared with the Quectel modem). This is primarily for
+factory use or when USB is unavailable.
+
+\subsubsection{9.3 RS485 Wind Sensor
+Interface}\label{rs485-wind-sensor-interface}
+
+The unit is the \textbf{Modbus master} on the RS485 bus. It queries the
+wind sensor periodically. It does \textbf{not} act as a Modbus slave ---
+external SCADA systems cannot query the ENVIRO\_DL over RS485.
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Protocol & Baud & Format & Configuration \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+RENKEE Modbus RTU & 9600 & 8N1 & \texttt{W=Y,0x00} \\
+Gill ASCII & Configurable &
+\texttt{"w?\textbackslash{}r\textbackslash{}n"} & \texttt{W=Y,0x01} \\
+\end{longtable}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{10. Terminal Command
+Reference}\label{terminal-command-reference}
+
+\subsubsection{10.1 Command Packet Format}\label{command-packet-format}
+
+All configuration commands use the Envirotech packet format:
+
+\begin{verbatim}
+(?eipl,<COMMAND_CODE>,<SEQUENCE>,<PAYLOAD>?)
+\end{verbatim}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Field & Description & Example \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{eipl} & Fixed header & \texttt{eipl} \\
+Command Code & C01--C24 & \texttt{C01} \\
+Sequence & 6-digit counter (use \texttt{000000}) & \texttt{000000} \\
+Payload & Key=value pairs delimited by \texttt{\&} &
+\texttt{key=value\&key2=value2} \\
+\end{longtable}
+
+\subsubsection{10.2 Command Summary}\label{command-summary}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Command
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Function
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Direction
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{C01} & Station info (SID, time, FW version, signal, faults) &
+Read \\
+\textbf{C02} & System config: sid, lkey, mpm, upm, sip1, sip2, rtc, etc.
+& Read/Write \\
+\textbf{C03} & Sensor enable/disable, wind protocol (\texttt{cfgbits}),
+unit conversion (\texttt{uc}) & Read/Write \\
+\textbf{C04} & Sensor slot description (ranges, parameters) & Read \\
+\textbf{C05} & FTP credentials (ftu, ftp, ftd, fts) & Read/Write \\
+\textbf{C06} & Trigger FOTA firmware update check & Action \\
+\textbf{C09} & THP sensor offsets (TEMP\_offset, HUM\_offset,
+PRESURE\_offset) & Read/Write \\
+\textbf{C10} & Current status report (latest sensor readings, all
+channels) & Read \\
+\textbf{C11} & Retrieve single day's log records from SD card & Read \\
+\textbf{C12} & Retrieve multi-day log records by date range & Read \\
+\textbf{C13} & Squall event status report & Read \\
+\textbf{C21} & System reset & Action \\
+\textbf{C22} & Clear SD card log & Action \\
+\textbf{C24} & Reset rain counter (rain\_inday → 0) & Action \\
+\textbf{help} & List all available commands & Read \\
+\end{longtable}
+
+\subsubsection{10.3 Short Terminal
+Commands}\label{short-terminal-commands}
+
+In addition to C-command packets, these short text commands are
+accepted:
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Command & Response \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{status} & Prints a full C10 status packet \\
+\texttt{config} & Prints current configuration \\
+\texttt{getclock} & Queries Quectel modem for network time \\
+\texttt{getsim} & Returns SIM ICCID, IMSI, MSISDN \\
+\texttt{getnet} & Returns network registration \& signal strength \\
+\texttt{rawlog} & Enables raw UART1 hex capture to USB \\
+\texttt{startfota} & Initiates a FOTA firmware update check \\
+\end{longtable}
+
+\subsubsection{10.4 C10 Status Response
+Example}\label{c10-status-response-example}
+
+\begin{verbatim}
+(?eipl,R10A,000001,locationkey=SITE01&stationkey=AWS_ROOF&datetime=1741513500&ch1=26.50&ch2=25.30&ch3=24.10&ch4=65.20&ch5=64.50&ch6=63.80&ch7=450.00&ch8=1013.20&ch9=25.00&ch10=4.80&ch11=3.20&ch12=2.50&ch13=12.50&ch14=12.30?)
+\end{verbatim}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Channel & Value in example & Meaning \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+ch1 & 26.50 & Temperature maximum (°C) \\
+ch2 & 25.30 & Temperature average (°C) \\
+ch3 & 24.10 & Temperature minimum (°C) \\
+ch4 & 65.20 & Humidity maximum (\%RH) \\
+ch5 & 64.50 & Humidity average (\%RH) \\
+ch6 & 63.80 & Humidity minimum (\%RH) \\
+ch7 & 450.00 & Solar radiation (W/m²) \\
+ch8 & 1013.20 & Barometric pressure (mbar) \\
+ch9 & 25.00 & Wind direction (degrees) \\
+ch10 & 4.80 & Wind speed maximum (m/s) \\
+ch11 & 3.20 & Wind speed average (m/s) \\
+ch12 & 2.50 & Wind speed minimum (m/s) \\
+ch13 & 12.50 & Daily rainfall (mm) \\
+ch14 & 12.30 & Battery/supply voltage (V) \\
+\end{longtable}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{11. Remote Data Upload}\label{remote-data-upload}
+
+\subsubsection{11.1 HTTP POST Upload}\label{http-post-upload}
+
+The unit uploads sensor data to a remote server using an \textbf{HTTP
+POST} request via the Quectel LTE modem.
+
+\textbf{Request format:}
+
+\begin{verbatim}
+POST /api/data HTTP/1.1
+Host: 192.168.1.100
+Content-Type: application/x-www-form-urlencoded
+
+datetime=20260309102500&locationkey=MUMBAI01&stationkey=AWS_ROOF&ch1=12.50&ch2=25.30...
+\end{verbatim}
+
+\textbf{Upload frequency:} Controlled by \texttt{upm} (upload period
+minutes). The unit attempts upload at the end of each upload window. On
+failure, it retries at the next interval.
+
+\subsubsection{11.2 Upload Failure
+Handling}\label{upload-failure-handling}
+
+\begin{itemize}
+\tightlist
+\item
+  If the server is unreachable, the record is queued and retry attempted
+  next period
+\item
+  Successful uploads are marked in the log table to avoid duplicate
+  sends
+\item
+  The upload counter on LCD Page 4 shows attempts vs.~successes for
+  diagnostics
+\end{itemize}
+
+\subsubsection{11.3 LTE Modem Status}\label{lte-modem-status}
+
+Use the terminal command \texttt{getnet} to check modem connectivity:
+
+\begin{verbatim}
+getnet
+\end{verbatim}
+
+Response includes registration status, operator name, and signal quality
+(RSSI).
+
+Use \texttt{getsim} to verify SIM is detected:
+
+\begin{verbatim}
+getsim
+\end{verbatim}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{12. Firmware Over-the-Air (FOTA)
+Update}\label{firmware-over-the-air-fota-update}
+
+\subsubsection{12.1 Overview}\label{overview}
+
+The ENVIRO\_DL supports firmware updates delivered by the Quectel LTE
+modem from a remote FTP/HTTP server. The process is fully automated
+with: - CRC32 integrity verification - Automatic rollback if the new
+firmware is corrupted - Backup of the previous firmware before flashing
+
+\subsubsection{12.2 Flash Memory Layout}\label{flash-memory-layout}
+
+\begin{verbatim}
+0x08000000  ┌─────────────────────────────────┐
+            │        Bootloader  (128 KB)      │  Sectors 0–4
+0x08020000  ├─────────────────────────────────┤
+            │       Application  (896 KB)      │  Sectors 5–11
+            │       ENVIRO_DL firmware         │
+0x08100000  └─────────────────────────────────┘
+\end{verbatim}
+
+\subsubsection{12.3 Update Process}\label{update-process}
+
+\textbf{Automatic (hourly check):} The \texttt{DataUploadManagerTask}
+checks for a new firmware version every hour. If available, the update
+begins automatically.
+
+\textbf{Manual (terminal command):}
+
+\begin{verbatim}
+startfota
+\end{verbatim}
+
+\textbf{Stages:} 1. STM32 sends
+\texttt{STARTFOTA:\textbackslash{}r\textbackslash{}n} to modem 2. Modem
+responds
+\texttt{FOTA:READY,\textless{}size\textgreater{},\textless{}version\textgreater{}\textbackslash{}r\textbackslash{}n}
+(or \texttt{FOTA:NOTAVAIL\textbackslash{}r\textbackslash{}n} if no
+update) 3. Firmware is streamed in 510-byte chunks to the SD card as
+\texttt{update.bin} 4. CRC32 is verified against the value sent by the
+modem 5. On CRC match: STM32 sets RTC backup flags and reboots 6.
+Bootloader: - Backs up existing firmware to \texttt{backup.bin} on SD -
+Erases application flash sectors - Programs and verifies
+\texttt{update.bin} - On success: clears flags, jumps to new application
+- On failure: restores \texttt{backup.bin}, continues with previous
+firmware
+
+\subsubsection{12.4 During an Update}\label{during-an-update}
+
+\begin{itemize}
+\tightlist
+\item
+  The LCD displays a \textbf{progress bar} on Page 5
+\item
+  The STATUS LED blinks rapidly
+\item
+  \textbf{DO NOT power off during a FOTA update}
+\item
+  If power is lost mid-update, the bootloader will detect incomplete
+  flags and restore from \texttt{backup.bin} on the next power cycle
+\end{itemize}
+
+\subsubsection{12.5 Version Check}\label{version-check}
+
+After a successful update, the firmware version is reported in the C10
+status packet and in the boot log via USB.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{13. LED Status Indicator}\label{led-status-indicator}
+
+The STATUS LED on GPIO PG4 provides visual indication of system health.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Pattern
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Meaning
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{1 Hz blink} (500 ms on/off) & System healthy, normal
+operation \\
+\textbf{Solid ON} & Active fault (check LCD Page 0 or USB for fault
+details) \\
+\textbf{200 ms single flash} & Sensor reading completed \\
+\textbf{3 × 100 ms rapid pulses} & Upload succeeded \\
+\textbf{2-second solid} & Upload failed \\
+\textbf{Rapid blink} & FOTA update in progress \\
+\end{longtable}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{14. Fault Codes \&
+Troubleshooting}\label{fault-codes-troubleshooting}
+
+\subsubsection{14.1 Fault Bitmask}\label{fault-bitmask}
+
+The system fault bitmask is reported in the C01 status packet
+(\texttt{F=} field) and displayed on LCD Page 0. It is \textbf{not} a
+numbered channel in the upload packet (ch13 is daily rainfall; ch14 is
+battery voltage).
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Bit (hex) & Fault & Cause \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{0x4000} & Power fault & Supply voltage out of range \\
+\texttt{0x2000} & SD card fault & SD not mounted or write error \\
+\texttt{0x1000} & Logging fault & File write failed \\
+\texttt{0x0800} & RTC fault & Internal or external RTC unresponsive \\
+\texttt{0x0400} & ADC fault & NAU7802 or ADS112C04 not responding \\
+\texttt{0x0200} & Modem fault & Quectel modem not responding \\
+\texttt{0x0100} & GPS fault & GPS query timeout (if GPS enabled) \\
+\end{longtable}
+
+A value of \texttt{0} means no faults. Read via:
+\texttt{(?eipl,C01,000000,?)}
+
+\subsubsection{14.2 Common Issues}\label{common-issues}
+
+\textbf{Unit powers on but STATUS LED stays solid:} - Check USB terminal
+for error messages - LCD Page 0 will show which subsystem
+(\texttt{SD:ERR}, \texttt{MOD:ERR}, etc.) is faulted - Verify SD card is
+inserted and formatted FAT32 - Verify sensor wiring (I2C pullups, RS485
+polarity)
+
+\textbf{No data on SD card:} - Confirm snap interval is configured
+correctly (\texttt{C04}) - Check SD card is not full - Verify
+\texttt{config.bin} is loaded at boot (USB terminal will log config load
+status)
+
+\textbf{Data not uploading:} - Check LTE signal: run \texttt{getnet} ---
+should show ``registered'' and RSSI \textgreater{} -90 dBm - Verify
+server IP and page configured correctly (\texttt{C06}) - Check SIM card
+is active and data plan is enabled (\texttt{getsim}) - Review upload
+counters on LCD Page 4
+
+\textbf{Wind readings are zero:} - Verify RS485 wiring (A/B polarity) -
+Confirm correct protocol selected (\texttt{W=Y,0x00} for RENKEE,
+\texttt{W=Y,0x01} for Gill) - Check wind sensor power supply - Use USB
+terminal --- boot log will show RS485 initialization status
+
+\textbf{Rain counts stuck at zero:} - Verify rain gauge wire connected
+to PG7 terminal - Test by momentarily shorting the rain gauge terminals
+--- count should increment - Check rain gauge reed switch with
+multimeter
+
+\textbf{Time is wrong after power cycle:} - Set time via \texttt{C07}
+command - Verify MCP7940 RTC has a coin cell battery installed - Check
+USB boot log for \texttt{MCP7940\ sync} messages
+
+\textbf{Temperature reading is out of range:} - Check PT1000 probe
+wiring to NAU7802 ADC - Verify calibration gain/offset via C02 command -
+Confirm NAU7802 I2C address (0x54) on bus
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{15. SD Card File Reference}\label{sd-card-file-reference}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.4348}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5652}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Filename
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{DDMMYY.csv} & Daily log file (e.g., \texttt{090326.csv} = 9
+March 2026) \\
+\texttt{DDMMYY\_bkp.csv} & Backup of previous day's log \\
+\texttt{config.bin} & Main configuration (snap interval, upload period,
+server, sensor enables) \\
+\texttt{nvdata.bin} & Non-volatile data (ADC calibration, battery
+voltage cal, rain persistence) \\
+\texttt{thp\_cfg.bin} & THP sensor offsets (temperature, humidity,
+pressure corrections) \\
+\texttt{ftp\_cfg.bin} & FTP server credentials (reserved for future
+use) \\
+\texttt{update.bin} & Staged FOTA firmware file (created during update,
+deleted after flash) \\
+\texttt{backup.bin} & Previous firmware backup (created by bootloader
+before flashing) \\
+\end{longtable}
+
+\textbf{Maintenance tips:} - Periodically archive and delete old
+\texttt{DDMMYY.csv} files to prevent the card from filling up - Do not
+delete \texttt{config.bin}, \texttt{nvdata.bin}, or
+\texttt{thp\_cfg.bin} --- these hold your calibration settings - Do not
+remove the SD card while the unit is powered
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{16. Technical
+Specifications}\label{technical-specifications}
+
+\subsubsection{Microcontroller}\label{microcontroller}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Parameter & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+MCU & STM32F417 \\
+Core & ARM Cortex-M4 \\
+Clock Speed & 168 MHz \\
+Flash & 1 MB \\
+RAM & 196 KB \\
+RTOS & FreeRTOS (CMSIS-RTOS v2) \\
+\end{longtable}
+
+\subsubsection{Communication}\label{communication}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Interface & Standard & Notes \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+USB & USB 2.0 Full-Speed CDC & Virtual COM port \\
+LTE Modem & Quectel (AT command interface) & HTTP POST, FOTA \\
+RS485 & Modbus RTU / ASCII & Wind sensor only \\
+I2C & 100/400 kHz & Sensors, RTC \\
+SPI & --- & LCD, SD card \\
+\end{longtable}
+
+\subsubsection{Sensors}\label{sensors}
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Parameter & Sensor & Resolution & Range \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Temperature & PT1000 + NAU7802 & 24-bit ADC & -40 to +80 °C \\
+Humidity & ADS112C04 & 24-bit ADC & 0--100 \%RH \\
+Pressure & ADS112C04 / BMP280 & 24-bit ADC & 300--1100 hPa \\
+Wind Speed & RS485 sensor & 0.1 m/s & 0--60 m/s (sensor dependent) \\
+Wind Direction & ADS112C04 & 1° & 0--360° \\
+Solar Radiation & ADS112C04 & --- & 0--2000 W/m² \\
+Rainfall & Tipping bucket & 0.5 mm/tip & Unlimited accumulation \\
+\end{longtable}
+
+\subsubsection{Power}\label{power}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Parameter & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Input Voltage & 5--12 V DC \\
+Operating Current & \textasciitilde200--400 mA (typical, modem
+active) \\
+Sleep Current & N/A (always-on operation) \\
+RTC Backup & External coin cell via MCP7940 \\
+\end{longtable}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{17. Known Limitations}\label{known-limitations}
+
+The following features are planned or partially implemented but not yet
+available in this firmware version:
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3750}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2917}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Feature
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Status
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Notes
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+GPS / GNSS coordinates & Not implemented & Modem hardware capable;
+firmware support pending \\
+FTP upload & Not implemented & Infrastructure exists; not wired to
+scheduler \\
+Alert SMS on threshold breach & Not implemented & No real-time threshold
+monitoring \\
+Power-on SMS notification & Not implemented & --- \\
+Network time sync (NTP) & Not implemented & RTC may drift over weeks;
+set manually via C07 \\
+Low-power / sleep mode & Not implemented & Unit is always-on; not
+suitable for battery-only deployment without external management \\
+USB pen drive data export & Not implemented & No USB MSC host stack \\
+Real-time streaming (\texttt{stream\ N}) & Not implemented & Terminal
+command not yet functional \\
+Modbus slave (SCADA query) & Not implemented & Unit cannot be queried by
+external RS485 SCADA \\
+\end{longtable}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Appendix A --- Quick-Start Command
+Sequence}\label{appendix-a-quick-start-command-sequence}
+
+\begin{verbatim}
+# 1. Set station ID and location key (saved automatically)
+(?eipl,C02,000000,sid=AWS_ROOF&lkey=SITE01?)
+
+# 2. Set primary server IP
+(?eipl,C02,000000,sip1=192.168.1.100?)
+
+# 3. Set current date and time (format: YYMMDDHHmm)
+(?eipl,C02,000000,rtc=2603091030?)
+
+# 4. Set 5-minute snap interval and upload period
+(?eipl,C02,000000,mpm=5&upm=5?)
+
+# 5. Enable all sensors, RENKEE wind protocol, SI units
+(?eipl,C03,000000,R=Y,0x00;W=Y,0x00;T=Y,0x00;H=Y,0x00;P=Y,0x00?)
+
+# 6. Verify station info
+(?eipl,C01,000000,?)
+
+# 7. Read current sensor status
+(?eipl,C10,000000,?)
+\end{verbatim}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Appendix B --- Glossary}\label{appendix-b-glossary}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.6667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Term
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Definition
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{CDC} & USB Communications Device Class --- provides virtual COM
+port \\
+\textbf{FOTA} & Firmware Over-the-Air --- remote firmware update via
+modem \\
+\textbf{MMA} & Min/Max/Average --- statistical aggregation per snap
+interval \\
+\textbf{Modbus RTU} & Serial communication protocol used for wind
+sensor \\
+\textbf{PT1000} & Platinum resistance temperature detector, 1000 Ω at 0
+°C \\
+\textbf{RTC} & Real-Time Clock --- maintains date and time \\
+\textbf{Snap interval} & Period between log file writes and data
+uploads \\
+\textbf{SHT25/SHT45} & Sensirion humidity + temperature sensor
+(secondary) \\
+\textbf{BMP280} & Bosch barometric pressure sensor (secondary) \\
+\textbf{NAU7802} & 24-bit I2C ADC used for PT1000 temperature
+measurement \\
+\textbf{ADS112C04} & Texas Instruments 24-bit multi-channel ADC \\
+\textbf{Squall} & Sudden wind speed increase \textgreater25\%, detected
+by WMO state machine \\
+\textbf{ch13} & Daily rainfall total (mm) in every upload packet \\
+\textbf{ch14} & Battery / supply voltage (V) --- always included in
+every upload packet \\
+\end{longtable}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\emph{Document generated from firmware source code ---
+ENVIRO\_DL\_STM32F, March 2026} \emph{For technical support, contact
+SVIOT.}
+
+\end{document}
